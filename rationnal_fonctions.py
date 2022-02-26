@@ -1,23 +1,61 @@
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np 
 import random
 import tools
 import cmath
 import sys
 
-def fractale_f(f, X, Y, hauteur=256, longueur = 256, output_file=f"mandelbrot_images/m_{random.randint(100,1_000)}.png", cmap_file="dawn", maxIt = 256):
+def fractale_f(f, **kwargs):
+    """
+    Procédure traçant une fractale à l'aide de la fonction f (de signature (complex, complex) -> complex)
+    On pose pour chaque pixel la suite:
+    u_0 = coordonnées complexe du pixel
+    u_{n+1} = f(u_n,u_0)
+    Dès que la suite "converge suffisamment" ou qu'on a dépassé le nombre maximum d'itérations, on s'arrête, le rang du dernier terme fixe la couleur.
+    "Converger suffisamment" peut signifier:
+        1. Dépasser un certain module (on considère que le module des termes de la suite tend vers l'infini) N.B. Du coup la suite diverge grossièrement
+        2. Converger vers un complexe fini
+
+        Arguments:
+    @param DX (tuple) = intervalle de l'axe des réelles
+    @param DY (tuple) = intervalle de l'axe des imaginaires purs
+    @param resolution (tuple) = nombre de pixels longueur/hauteur
+        Par défaut (512,512)
+    @param output_file (string) = nom_du_fichier_de_sortie
+    @param cmap_file (string) = nom du fichier pour la palette de couleur
+    @param maxIt = nombre maximum d'itérations 
+        Par défaut la valeur est 30. Attention il doit y avoir plus de valeurs dans cmap que maxIt
+    @param epsilon
+        Par défaut la valeur est 1e-4
+    @param limit_modulus
+        Par défaut la valeur est 50
+    @param show (bool): Vrai par défaut
+    @param label (str) : label en bas à droite
+    """
+    # f"mandelbrot_images/m_{random.randint(100,1_000)}.png", cmap_file="dawn", maxIt = 256,
+
+    #* On récupère les paramètres
+    DX = kwargs.get("DX", (-1,1))
+    DY = kwargs.get("DY", (-1,1))
+    resolution = kwargs.get("resolution", (512,512))
+    output_file = kwargs.get("output_file", None)
+    cmap_file = kwargs.get("cmap_file", "fires")
+    maxIt = kwargs.get("maxIt", 30)
+    epsilon = kwargs.get("epsilon", 1e-4)
+    limit_modulus = kwargs.get("limit_modulus", 50)
+    show = kwargs.get("show", True)
+    label = kwargs.get("label", None)
 
     cmap = tools.load_cmap(cmap_file, maxIt+1)
+    (longueur, hauteur) = resolution
+    fontsize = 15
+    font = ImageFont.truetype("arial.ttf", fontsize)
 
-    epsilon = 1e-6
-    limit_modulus = 50
-
-    X = np.linspace(X[0], X[1], longueur)
-    Y = np.linspace(Y[0], Y[1], hauteur)
+    X = np.linspace(DX[0], DX[1], longueur)
+    Y = np.linspace(DY[0], DY[1], hauteur)
 
     image = Image.new("RGB", (longueur, hauteur), "white")
-    # image.putpixel((500,200), black)
 
     draw = ImageDraw.Draw(image)
 
@@ -43,8 +81,15 @@ def fractale_f(f, X, Y, hauteur=256, longueur = 256, output_file=f"mandelbrot_im
                 print(i)
                 sys.exit()
 
-    image.show()
-    image.save(output_file, "PNG")
+    if label:
+        off_size_x = 300
+        off_size_y = 20
+        draw.text((longueur-off_size_x, hauteur-off_size_y), text=label, fill=(255,255,255), font=font)
+
+    if show:
+        image.show()
+    if output_file:
+        image.save(output_file, "PNG")
 
 def zoom_fractal_f(f, hauteur=512, longeur=512):
     xMin, xMax, yMin, yMax = -2.0,1.0,-3/2,3/2
@@ -102,17 +147,30 @@ if __name__ == "__main__":
 
    
 
-    size_x = size_y = 1024
-    newton = lambda z,c : z-(z**5-1)/(5*z**4)
-    f = lambda z,c: cmath.exp(z)
+    size_x = size_y = 4096
+    function_name = "f(z,c) = exp(z)+c"
+    f = lambda z,c: cmath.exp(z) + c
     scale_coef = 1
-    cmap_name = "purples"
-    fractale_f(f, [-2*scale_coef,2*scale_coef], [-2 * scale_coef,2 * scale_coef], size_x, size_y, f"images/exp_2_{scale_coef}_{size_x}_{size_y}_{cmap_name}.png", cmap_name, 30)
+    cmap_name = "reds"
+    fractale_f(f, 
+        DX = (-2*scale_coef,2*scale_coef), 
+        DY = (-2 * scale_coef,2 * scale_coef),
+        resolution = (size_x, size_y), 
+        output_file = f"best_pictures/exponential_1_{size_x}_{size_y}_{cmap_name}.png", 
+        cmap_file = cmap_name, 
+        maxIt = 35, 
+        label = function_name)
 
 
 """
 Colormaps:
 https://jdherman.github.io/colormap/
+http://fractalforums.com/programming/newbie-how-to-map-colors-in-the-mandelbrot-set/
+https://en.wikipedia.org/wiki/Monotone_cubic_interpolation
+https://stackoverflow.com/questions/16500656/which-color-gradient-is-used-to-color-mandelbrot-in-wikipedia
+https://colordesigner.io/gradient-generator
+https://colorgradient.dev/
+
 Fonctions:
     2. f = lambda z,c : (z**3 + c)/z
     3. f = lambda z,c : (z**3 + z**2 + c)/z
