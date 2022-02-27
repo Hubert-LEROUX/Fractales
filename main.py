@@ -5,6 +5,7 @@ import random
 import tools
 import cmath
 import sys
+import os
 
 def fractale_f(f, **kwargs):
     """
@@ -32,6 +33,7 @@ def fractale_f(f, **kwargs):
         Par défaut la valeur est 50
     @param show (bool): Vrai par défaut
     @param label (str) : label en bas à droite
+    @param condition_arret (lambda (complex, complex) -> bool): prend en paramètres le dernier et l'avant dernier terme de la suite
     """
     # f"mandelbrot_images/m_{random.randint(100,1_000)}.png", cmap_file="dawn", maxIt = 256,
 
@@ -46,10 +48,13 @@ def fractale_f(f, **kwargs):
     limit_modulus = kwargs.get("limit_modulus", 50)
     show = kwargs.get("show", True)
     label = kwargs.get("label", None)
+    condition_arret = kwargs.get("condition_arret", lambda z,last: abs(z) > limit_modulus or abs(z-last)<=epsilon)
+
+    # print(condition_arret(0.5, 0.5))
 
     cmap = tools.load_cmap(cmap_file, maxIt+1)
     (longueur, hauteur) = resolution
-    fontsize = 15
+    fontsize = 20
     font = ImageFont.truetype("arial.ttf", fontsize)
 
     X = np.linspace(DX[0], DX[1], longueur)
@@ -60,10 +65,14 @@ def fractale_f(f, **kwargs):
     draw = ImageDraw.Draw(image)
 
     def get_rank_diverge(c):
+        """
+        u_0 = c
+        u_{n+1} = f(u_n, u_0)
+        """
         z = c
         last = float("+inf")
         i = 0
-        while abs(z) <= limit_modulus and abs(z-last)>epsilon and i <= maxIt:
+        while not condition_arret(z, last) and i < maxIt:
             try:
                 last, z = z, f(z, c)
             except ZeroDivisionError:
@@ -134,10 +143,19 @@ def zoom_fractal_f(f, hauteur=512, longeur=512):
         yMax = yMin + (iLigne+1)*taille_sub_division_y
         yMin = yMin + iLigne*taille_sub_division_y
 
-def zoom_fractal_f_one_point(f, point, nb_images=20, folder="zoom_one_point", rapport = 1/2):
+def zoom_fractal_f_one_point(f, point, nb_images=20, folder="zoom_one_point", rapport = 1/2, prefix_label="Zoom", **kwargs):
     X, Y = point
+    os.mkdir(folder)
+
+    delta = 2
     for k in range(nb_images):
-        mandelbrot(f, [X-rapport**k, X+rapport**k], [Y-rapport**k, Y+rapport**k], 512, 512, f"{folder}/Point_{str(X).replace('.', '-')}_{str(Y).replace('.','-')}_rapport_{str(rapport).replace('.', '-')}_zoom_{k+1}.png")
+        delta *= rapport
+        fractale_f(f, 
+            DX=(X-delta, X+delta), 
+            DY=(Y-delta, Y+delta), 
+            label = prefix_label + str(k+1),
+            output_file=f"{folder}/zoom_{k+1}.png", 
+            **kwargs)
         print(f"Done with image #{k+1}")
 
 
@@ -147,62 +165,49 @@ if __name__ == "__main__":
 
    
 
-    size_x = size_y = 4096
-    function_name = "f(z,c) = exp(z)+c"
-    f = lambda z,c: cmath.exp(z) + c
-    scale_coef = 1
-    cmap_name = "reds"
-    fractale_f(f, 
-        DX = (-2*scale_coef,2*scale_coef), 
-        DY = (-2 * scale_coef,2 * scale_coef),
+    # size_x = size_y = 1024
+    # for d in range(100):
+    #     print(d)
+    #     function_name = f"Racines z^{d}-1"
+    #     f = lambda z,c: z - (z**d-1)/(d*(z**(d-1)))
+    #     # scale_coef = 1
+    #     cmap_name = "regular_cmap_2"
+    #     # condition_arret = lambda z, previous: abs(z)>2 # Infinite
+    #     condition_arret = lambda z, previous: abs(z-previous) <= 1e-4
+    #     fractale_f(f, 
+    #         DX = (-2, 2), 
+    #         DY = (-2, 2),
+    #         resolution = (size_x, size_y), 
+    #         output_file = f"racines_unite/regular_cmap_2/Racines_{str(d).replace('.','_')}_{size_x}_{size_y}_{cmap_name}.png", 
+    #         cmap_file = cmap_name, 
+    #         maxIt = 37, 
+    #         label = function_name,
+    #         show = False,
+    #         condition_arret=condition_arret
+    #         )
+    
+    #*Zone zoom
+    point = (-0.22817920780250860271229, 1.11515676722969926888287)
+    size_x = size_y = 256
+    nb_images = 50
+    rapport = 3/4
+    prefix_label = f"Mandelbrot zoom {point[0]}+{point[1]} i"
+
+    f = lambda z,c: z*z + c
+    # scale_coef = 1
+    cmap_name = "cmap_wiki"
+    # condition_arret = lambda z, previous: abs(z)>2 # Infinite
+    condition_arret = lambda z, previous: abs(z) < 10
+    zoom_fractal_f_one_point(f, 
+        point,
+        nb_images,
+        "zoom_mandelbrot_1",
+        rapport = rapport,
+        prefix_label=prefix_label,
+        DX = (-2, 2), 
+        DY = (-2, 2),
         resolution = (size_x, size_y), 
-        output_file = f"best_pictures/exponential_1_{size_x}_{size_y}_{cmap_name}.png", 
         cmap_file = cmap_name, 
-        maxIt = 35, 
-        label = function_name)
-
-
-"""
-Colormaps:
-https://jdherman.github.io/colormap/
-http://fractalforums.com/programming/newbie-how-to-map-colors-in-the-mandelbrot-set/
-https://en.wikipedia.org/wiki/Monotone_cubic_interpolation
-https://stackoverflow.com/questions/16500656/which-color-gradient-is-used-to-color-mandelbrot-in-wikipedia
-https://colordesigner.io/gradient-generator
-https://colorgradient.dev/
-
-Fonctions:
-    2. f = lambda z,c : (z**3 + c)/z
-    3. f = lambda z,c : (z**3 + z**2 + c)/z
-    4. f = lambda z,c : (z**3 + z**2 + c)/(z*z)
-    5. f = lambda z,c : z - (z**4+3*z+1)/(5*z**2-6*z+1)
-    6. f = lambda z,c: cmath.exp(z)+c
-    7. Cos complexe https://fr.wikipedia.org/wiki/Cosinus
-    8. Tan -> nul
-    9. Sqrt -> Continu
-    10. acos
-    11. f = lambda z,c: cmath.sin(z**2+3*z)-cmath.sin(z)
-    12. f = lambda z,c: z-(cmath.exp(z)-2)/(cmath.exp(z))
-    13. f = lambda z,c: z-cmath.tan(z)
-    14. f = lambda z,c: z-(cmath.exp(z)-2)/(cmath.exp(z))
-    15. f = lambda z,c: (z-(cmath.tan(z)-2)/(1+cmath.tan(z)**2))
-    16. f = lambda z,c: z- z * (cmath.log(z)+4)
-
-        SUPER_MANDELBROT
-    17. f = lambda z,c: z**5+c
-    18. f = lambda z,c: z**5+z**4+z**3+c
-    19. f = z+c
-    20. f = zẑ+c
-    20. f = zẑ
-    22. f = z**2 - ()/()
-    23. f = lambda z,c: z - (z**2+1)**2/(z**3+12)
-    25. f = lambda z,c: z**2+1/(z**8) + c
-    26. f = lambda z,c: (z+1)/(z**8) + c
-    
-
-    
-  Système de couleur actuel...
-# color = (i % 4 * 64, i % 8 * 32, i % 16 *16)
-# tools.save_cmap([(i % 4 * 64, i % 8 * 32, i % 16 *16) for i in range(256)], "regular_mandelbrot")
-
-"""
+        maxIt = 50, 
+        show = True,
+        condition_arret=condition_arret)
