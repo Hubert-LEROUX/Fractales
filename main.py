@@ -145,18 +145,21 @@ def zoom_fractal_f(f, hauteur=512, longeur=512):
 
 def zoom_fractal_f_one_point(f, point, nb_images=20, folder="zoom_one_point", rapport = 1/2, prefix_label="Zoom", **kwargs):
     X, Y = point
-    os.mkdir(folder)
+    folder = os.path.join("zooms", folder)
+    if not os.path.exists(folder):
+        # print("Hello")
+        os.makedirs(folder)
 
     delta = 2
     for k in range(nb_images):
-        delta *= rapport
         fractale_f(f, 
             DX=(X-delta, X+delta), 
             DY=(Y-delta, Y+delta), 
             label = prefix_label + str(k+1),
             output_file=f"{folder}/zoom_{k+1}.png", 
             **kwargs)
-        print(f"Done with image #{k+1}")
+        print(f"Done with image #{k+1} - {(X-delta, X+delta)} - {(Y-delta, Y+delta)}")
+        delta *= rapport
 
 
 if __name__ == "__main__":
@@ -188,8 +191,8 @@ if __name__ == "__main__":
     
     #*Zone zoom
     point = (-0.22817920780250860271229, 1.11515676722969926888287)
-    size_x = size_y = 256
-    nb_images = 50
+    size_x = size_y = 1024
+    nb_images = 120
     rapport = 3/4
     prefix_label = f"Mandelbrot zoom {point[0]}+{point[1]} i"
 
@@ -197,17 +200,15 @@ if __name__ == "__main__":
     # scale_coef = 1
     cmap_name = "cmap_wiki"
     # condition_arret = lambda z, previous: abs(z)>2 # Infinite
-    condition_arret = lambda z, previous: abs(z) < 10
+    condition_arret = lambda z, previous: abs(z) > 10
     zoom_fractal_f_one_point(f, 
         point,
         nb_images,
-        "zoom_mandelbrot_1",
+        "zoom_mandelbrot_2",
         rapport = rapport,
         prefix_label=prefix_label,
-        DX = (-2, 2), 
-        DY = (-2, 2),
         resolution = (size_x, size_y), 
         cmap_file = cmap_name, 
-        maxIt = 50, 
-        show = True,
+        maxIt = 70, 
+        show = False,
         condition_arret=condition_arret)
