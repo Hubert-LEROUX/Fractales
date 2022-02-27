@@ -169,29 +169,27 @@ if __name__ == "__main__":
    
 
     # size_x = size_y = 1024
-    # for d in range(100):
-    #     print(d)
-    #     function_name = f"Racines z^{d}-1"
-    #     f = lambda z,c: z - (z**d-1)/(d*(z**(d-1)))
-    #     # scale_coef = 1
-    #     cmap_name = "regular_cmap_2"
-    #     # condition_arret = lambda z, previous: abs(z)>2 # Infinite
-    #     condition_arret = lambda z, previous: abs(z-previous) <= 1e-4
-    #     fractale_f(f, 
-    #         DX = (-2, 2), 
-    #         DY = (-2, 2),
-    #         resolution = (size_x, size_y), 
-    #         output_file = f"racines_unite/regular_cmap_2/Racines_{str(d).replace('.','_')}_{size_x}_{size_y}_{cmap_name}.png", 
-    #         cmap_file = cmap_name, 
-    #         maxIt = 37, 
-    #         label = function_name,
-    #         show = False,
-    #         condition_arret=condition_arret
-    #         )
+    # function_name = f"Mandelbrot"
+    # f = lambda z,c: z*z+c
+    # # scale_coef = 1
+    # cmap_name = "cmap_wiki"
+    # # condition_arret = lambda z, previous: abs(z)>2 # Infinite
+    # condition_arret = lambda z, previous: abs(z) > 10
+    # fractale_f(f, 
+    #     DX = (-2, 0), 
+    #     DY = (-1, 1),
+    #     resolution = (size_x, size_y), 
+    #     # output_file = f"racines_unite/regular_cmap_2/Racines_{str(d).replace('.','_')}_{size_x}_{size_y}_{cmap_name}.png", 
+    #     cmap_file = cmap_name, 
+    #     maxIt = 37, 
+    #     label = function_name,
+    #     show = True,
+    #     condition_arret=condition_arret
+    #     )
     
     #*Zone zoom
-    point = (-0.22817920780250860271229, 1.11515676722969926888287)
-    size_x = size_y = 1024
+    point = (-0.8005751794227, 0.1707571631678)
+    size_x = size_y = 256
     nb_images = 120
     rapport = 3/4
     prefix_label = f"Mandelbrot zoom {point[0]}+{point[1]} i"
@@ -204,11 +202,11 @@ if __name__ == "__main__":
     zoom_fractal_f_one_point(f, 
         point,
         nb_images,
-        "zoom_mandelbrot_2",
+        "zoom_mandelbrot_3",
         rapport = rapport,
         prefix_label=prefix_label,
         resolution = (size_x, size_y), 
         cmap_file = cmap_name, 
         maxIt = 70, 
-        show = False,
+        show = True,
         condition_arret=condition_arret)

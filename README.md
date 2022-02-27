@@ -1,5 +1,7 @@
 # Fractales
 
+[Alt text](https://raw.githubusercontent.com/Hubert-LEROUX/Fractales/master/best_pictures/exponential_1_4096_4096_reds.png "Fractal complex exponential")
+
 ## Colormaps
 
 color = (i % 4 * 64, i % 8 * 32, i % 16 *16)
@@ -54,10 +56,15 @@ https://www.geeksforgeeks.org/mandlebrot-set-in-c-c-using-graphics/
 ## Create gif file
 https://ostechnix.com/create-animated-gif-ubuntu-16-04/
 
-Interesting points mandelbrot set
+## Interesting points mandelbrot set
 
+For exploration
+http://davidbau.com/mandelbrot/
 https://mathr.co.uk/blog/2013-02-01_navigating_by_spokes_in_the_mandelbrot_set.html
  -0.22817920780250860271229 +
   1.11515676722969926888287 i
+
+  -0.8005751794227
+  +0.1707571631678 i
 
 @ 3.32e-21
