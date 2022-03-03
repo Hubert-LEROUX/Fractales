@@ -6,10 +6,11 @@ import tools
 import cmath
 import sys
 import os
+# import math
 
 def fractale_f(f, **kwargs):
     """
-    Procédure traçant une fractale à l'aide de la fonction f (de signature (complex, complex) -> complex)
+    Trace une fractale à l'aide de la fonction f (de signature (complex, complex) -> complex)
     On pose pour chaque pixel la suite:
     u_0 = coordonnées complexe du pixel
     u_{n+1} = f(u_n,u_0)
@@ -34,6 +35,7 @@ def fractale_f(f, **kwargs):
     @param show (bool): Vrai par défaut
     @param label (str) : label en bas à droite
     @param condition_arret (lambda (complex, complex) -> bool): prend en paramètres le dernier et l'avant dernier terme de la suite
+    @return image # Si on veut faire des trucs en plus avec
     """
     # f"mandelbrot_images/m_{random.randint(100,1_000)}.png", cmap_file="dawn", maxIt = 256,
 
@@ -99,11 +101,13 @@ def fractale_f(f, **kwargs):
         image.show()
     if output_file:
         image.save(output_file, "PNG")
+    return image # on retourne l'image
 
-def zoom_fractal_f(f, hauteur=512, longeur=512):
-    xMin, xMax, yMin, yMax = -2.0,1.0,-3/2,3/2
+
+def zoom_fractal_f_manuel(f, start_window=(-2.0,1.0,-3/2,3/2), **kwargs):
+    xMin, xMax, yMin, yMax = start_window
     while True:
-        mandelbrot(f, (xMin, xMax), (yMin, yMax))
+        img = fractale_f(f, DX=(xMin, xMax), DY=(yMin, yMax), **kwargs)
         NB_DIVISIONS = 3
         print(f"xMin:\t{xMin:5f}\txMax:\t{xMax:5f}")
         print(f"yMin:\t{yMin:5f}\tyMax:\t{yMax:5f}")
@@ -113,44 +117,51 @@ def zoom_fractal_f(f, hauteur=512, longeur=512):
             | 3 | 4 | 5 |
             | 6 | 7 | 8 |
             Entrer -1 pour sortir
+            Entrer 9 pour enregister.
         """)
         subdivision = int(input())
 
-        deltaX = (xMax-xMin)
-        deltaY = (yMax-yMin )
 
-        iCol = subdivision % NB_DIVISIONS
-        iLigne = subdivision // NB_DIVISIONS
-
-        print(f"Ligne: {iLigne}")
-        print(f"Colonne: {iCol}")
-        print(f"deltaX:{deltaX}\tdeltaY:{deltaY}")
-
-        if not 0 <= subdivision <= NB_DIVISIONS**2:
+        if not 0 <= subdivision <= NB_DIVISIONS**2 :
             break 
+    
+        if subdivision == NB_DIVISIONS**2:
+            print("Give the name of the ouput file")
+            name_output = input()
+            img.save(name_output, "PNG")
+        else:
+            deltaX = (xMax-xMin)
+            deltaY = (yMax-yMin )
 
-        taille_sub_division_x = deltaX / NB_DIVISIONS
-        taille_sub_division_y = deltaY / NB_DIVISIONS
+            iCol = subdivision % NB_DIVISIONS
+            iLigne = subdivision // NB_DIVISIONS
 
-        print(f"TailleX={taille_sub_division_x}")
-        print(f"TailleY={taille_sub_division_y}")
+            print(f"Ligne: {iLigne}")
+            print(f"Colonne: {iCol}")
+            print(f"deltaX:{deltaX}\tdeltaY:{deltaY}")
+            taille_sub_division_x = deltaX / NB_DIVISIONS
+            taille_sub_division_y = deltaY / NB_DIVISIONS
 
-        # On recalcule xMin et xMax
-        xMax = xMin + (iCol+1) * taille_sub_division_x # Attention à placer cette ligne en premier !
-        xMin = xMin + iCol * taille_sub_division_x 
+            print(f"TailleX={taille_sub_division_x}")
+            print(f"TailleY={taille_sub_division_y}")
 
-        # On recalcule yMin et yMax
-        yMax = yMin + (iLigne+1)*taille_sub_division_y
-        yMin = yMin + iLigne*taille_sub_division_y
+            # On recalcule xMin et xMax
+            xMax = xMin + (iCol+1) * taille_sub_division_x # Attention à placer cette ligne en premier !
+            xMin = xMin + iCol * taille_sub_division_x 
 
-def zoom_fractal_f_one_point(f, point, nb_images=20, folder="zoom_one_point", rapport = 1/2, prefix_label="Zoom", **kwargs):
+            # On recalcule yMin et yMax
+            yMax = yMin + (iLigne+1)*taille_sub_division_y
+            yMin = yMin + iLigne*taille_sub_division_y
+
+
+def zoom_fractal_f_automatique(f, point, nb_images=20, folder="zoom_one_point", start_window = 2, rapport = 1/2, prefix_label="Zoom", **kwargs):
     X, Y = point
     folder = os.path.join("zooms", folder)
     if not os.path.exists(folder):
         # print("Hello")
         os.makedirs(folder)
 
-    delta = 2
+    delta = start_window/2
     for k in range(nb_images):
         fractale_f(f, 
             DX=(X-delta, X+delta), 
@@ -168,45 +179,58 @@ if __name__ == "__main__":
 
    
 
-    # size_x = size_y = 1024
-    # function_name = f"Mandelbrot"
-    # f = lambda z,c: z*z+c
-    # # scale_coef = 1
-    # cmap_name = "cmap_wiki"
-    # # condition_arret = lambda z, previous: abs(z)>2 # Infinite
-    # condition_arret = lambda z, previous: abs(z) > 10
+    size_x = size_y = 256
+    function_name = f"Fonction sin"
+    f = lambda z,c : z - cmath.tan(z)
+    # scale_coef = 1
+    cmap_name = "regular_cmap_2"
+    # condition_arret = lambda z, previous: abs(z)>2 # Infinite
+    condition_arret = lambda z, previous: abs(z-previous) < 1e-4 or abs(z) > 1_000
+    
+    #*One shot
     # fractale_f(f, 
-    #     DX = (-2, 0), 
-    #     DY = (-1, 1),
+    #     DX = (np.pi/2 - delta, np.pi/2 + delta), 
+    #     DY = (-delta, delta),
     #     resolution = (size_x, size_y), 
-    #     # output_file = f"racines_unite/regular_cmap_2/Racines_{str(d).replace('.','_')}_{size_x}_{size_y}_{cmap_name}.png", 
+    #     output_file = f"best_pictures/racines_sin_zoom_1_{size_x}_{size_y}_{cmap_name}.png", 
     #     cmap_file = cmap_name, 
     #     maxIt = 37, 
     #     label = function_name,
-    #     show = True,
+    #     show = False,
     #     condition_arret=condition_arret
     #     )
     
-    #*Zone zoom
-    point = (-0.8005751794227, 0.1707571631678)
-    size_x = size_y = 256
-    nb_images = 120
-    rapport = 3/4
-    prefix_label = f"Mandelbrot zoom {point[0]}+{point[1]} i"
+    #* Zone zoom manuel
+    zoom_fractal_f_manuel(f, 
+            start_window=(-2,2,-2,2),
+            resolution = (size_x, size_y), 
+            cmap_file = cmap_name, 
+            maxIt = 37, 
+            label = function_name,
+            show = True,
+            condition_arret=condition_arret)   
 
-    f = lambda z,c: z*z + c
-    # scale_coef = 1
-    cmap_name = "cmap_wiki"
-    # condition_arret = lambda z, previous: abs(z)>2 # Infinite
-    condition_arret = lambda z, previous: abs(z) > 10
-    zoom_fractal_f_one_point(f, 
-        point,
-        nb_images,
-        "zoom_mandelbrot_3",
-        rapport = rapport,
-        prefix_label=prefix_label,
-        resolution = (size_x, size_y), 
-        cmap_file = cmap_name, 
-        maxIt = 70, 
-        show = True,
-        condition_arret=condition_arret)
+    #*Zone zoom automatique
+    # point = (np.pi/2, 0)
+    # size_x = size_y = 2048
+    # nb_images = 35
+    # rapport = 3/4
+    # prefix_label = f"Sinus zoom {point[0]}+{point[1]} i"
+
+    # f = lambda z,c: z - cmath.tan(z)
+    # # scale_coef = 1
+    # cmap_name = "regular_cmap_2"
+    # # condition_arret = lambda z, previous: abs(z)>2 # Infinite
+    # condition_arret = lambda z, previous: abs(z-previous) < 1e-4 or abs(z) > 1_000
+    # zoom_fractale_f_automatique(f, 
+    #     point,
+    #     nb_images,
+    #     "zoom_sin_1",
+    #     start_window = 50,
+    #     rapport = rapport,
+    #     prefix_label=prefix_label,
+    #     resolution = (size_x, size_y), 
+    #     cmap_file = cmap_name, 
+    #     maxIt = 37, 
+    #     show = True,
+    #     condition_arret=condition_arret)

@@ -64,10 +64,10 @@ def create_cmap_throught_interpolation(x_observed, RGBs_observed, name="cmap_fro
 
     #Plot the values if you want
 
-    # plt.plot(x, yR, color = "red")
-    # plt.plot(x, yG, color = "green")
-    # plt.plot(x, yB, color = "blue")
-    # plt.show()
+    plt.plot(x, yR, color = "red")
+    plt.plot(x, yG, color = "green")
+    plt.plot(x, yB, color = "blue")
+    plt.show()
 
     # On enregistre
     save_cmap([(yR[i], yG[i], yB[i]) for i in range(len(yR))], name)
